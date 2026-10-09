@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawNest - Online Pet Adoption Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for Platform Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Canvas Confetti for Celebration Effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans relative selection:bg-orange-500 selection:text-white">
+
+  <!-- TOP HEADER & ROLE SWITCHER BAR -->
+  <header class="sticky top-0 z-40 glass-header border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+            <i data-lucide="paw-print" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <span class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center gap-1.5">
+              PawNest <span class="text-[11px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-bold border border-orange-200">Adoption Hub</span>
+            </span>
+            <p class="text-[11px] text-slate-500 -mt-0.5 hidden sm:block">Connecting rescues with loving forever homes</p>
+          </div>
+        </div>
+
+        <!-- Role Switcher (Persona Selector) -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 shadow-inner">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 hidden md:inline-block">Persona:</span>
+          <button id="role-btn-adopter" onclick="switchRole('adopter')" class="role-switch-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 bg-white text-orange-600 shadow-sm">
+            <i data-lucide="heart" class="w-3.5 h-3.5"></i>
+            <span>Adopter</span>
+          </button>
+          <button id="role-btn-shelter" onclick="switchRole('shelter')" class="role-switch-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+            <i data-lucide="home" class="w-3.5 h-3.5"></i>
+            <span>Shelter</span>
+          </button>
+          <button id="role-btn-admin" onclick="switchRole('admin')" class="role-switch-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            <span>Admin</span>
+          </button>
+        </div>
+
+        <!-- Quick Actions & Profile -->
+        <div class="flex items-center gap-2.5">
+          <!-- Reset Demo Data -->
+          <button onclick="resetDataConfirmation()" title="Reset Mock Data to Initial State" class="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Reset Demo</span>
+          </button>
+
+          <!-- Current Active Profile Badge -->
+          <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div id="currentUserAvatar" class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs ring-2 ring-orange-200">
+              SJ
+            </div>
+            <div class="hidden lg:block text-left">
+              <div id="currentUserName" class="text-xs font-semibold text-slate-800 leading-tight">Sarah Jenkins</div>
+              <div id="currentUserRole" class="text-[10px] text-orange-600 font-medium capitalize">Adopter</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ROLE BANNER NOTIFICATION -->
+  <div id="role-banner" class="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border-b border-orange-200/60 py-2 px-4 text-center text-xs text-orange-900 font-medium">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <span class="inline-flex items-center gap-1.5">
+        <i data-lucide="info" class="w-3.5 h-3.5 text-orange-600"></i>
+        <span id="role-banner-text">Viewing as <strong>Adopter</strong>. Browse available pets, apply for adoption, and track status.</span>
+      </span>
+      <button onclick="openTourModal()" class="text-xs text-orange-700 underline font-bold hover:text-orange-900 hidden sm:inline-flex items-center gap-1">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Quick 1-Click Demo Tour
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- 1. ADOPTER DASHBOARD VIEW                  -->
+    <!-- ========================================== -->
+    <section id="view-adopter" class="dashboard-view animate-fade-in space-y-6">
+      
+      <!-- Adopter Sub-tabs Navigation -->
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-200 pb-3 gap-3">
+        <div class="flex flex-wrap gap-2">
+          <button onclick="switchAdopterTab('browse')" id="adopter-tab-browse" class="adopter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg bg-orange-600 text-white shadow-sm flex items-center gap-2">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            Browse Pets
+          </button>
+          <button onclick="switchAdopterTab('applications')" id="adopter-tab-applications" class="adopter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            My Applications <span id="adopter-app-count-badge" class="ml-1 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full font-bold">2</span>
+          </button>
+          <button onclick="switchAdopterTab('messages')" id="adopter-tab-messages" class="adopter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            Shelter Messages <span id="adopter-msg-badge" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+          </button>
+          <button onclick="switchAdopterTab('history')" id="adopter-tab-history" class="adopter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+            <i data-lucide="award" class="w-4 h-4"></i>
+            Adoption History
+          </button>
+          <button onclick="switchAdopterTab('profile')" id="adopter-tab-profile" class="adopter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+            <i data-lucide="user" class="w-4 h-4"></i>
+            Profile Management
+          </button>
+        </div>
+
+        <div class="text-xs text-slate-500 flex items-center gap-1">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-orange-500"></i>
+          Location: <span class="font-medium text-slate-700" id="adopter-current-location">Seattle, WA</span>
+        </div>
+      </div>
+
+      <!-- ADOPTER TAB 1: BROWSE PETS -->
+      <div id="adopter-subtab-browse" class="space-y-6">
+        
+        <!-- Hero Search & Filters -->
+        <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+            <i data-lucide="paw-print" class="w-64 h-64"></i>
+          </div>
+
+          <div class="relative z-10 max-w-3xl">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-white mb-2">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Vetted & Health-Checked Animals
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Find Your Forever Friend</h1>
+            <p class="text-orange-100 text-xs sm:text-sm mt-1 mb-5">Browse rescued dogs, cats, rabbits, and birds from certified shelters waiting for caring homes.</p>
+
+            <!-- Search Bar & Filters -->
+            <div class="bg-white p-2.5 rounded-xl shadow-xl flex flex-col sm:flex-row gap-2.5 text-slate-800">
+              <div class="flex-1 relative">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                <input type="text" id="petSearchInput" oninput="filterPets()" placeholder="Search pet name, breed, temperament..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-slate-800">
+              </div>
+
+              <div class="grid grid-cols-2 sm:flex gap-2">
+                <select id="petTypeFilter" onchange="filterPets()" class="px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium">
+                  <option value="ALL">All Pet Types</option>
+                  <option value="Dog">🐶 Dogs</option>
+                  <option value="Cat">🐱 Cats</option>
+                  <option value="Rabbit">🐰 Rabbits</option>
+                  <option value="Bird">🦜 Birds</option>
+                </select>
+
+                <select id="petLocationFilter" onchange="filterPets()" class="px-3 py-2 text-xs sm:text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium">
+                  <option value="ALL">All Locations</option>
+                  <option value="Seattle, WA">Seattle, WA</option>
+                  <option value="Portland, OR">Portland, OR</option>
+                  <option value="San Francisco, CA">San Francisco, CA</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Quick Tags & Favorites Toggle -->
+        <div class="flex items-center justify-between flex-wrap gap-2 text-sm">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Species:</span>
+            <button onclick="setPetTypeFilter('ALL')" class="pet-quick-pill px-3 py-1 rounded-full text-xs font-semibold border bg-orange-600 text-white border-orange-600" data-filter="ALL">All</button>
+            <button onclick="setPetTypeFilter('Dog')" class="pet-quick-pill px-3 py-1 rounded-full text-xs font-semibold border bg-white text-slate-700 border-slate-200 hover:border-orange-300" data-filter="Dog">🐶 Dogs</button>
+            <button onclick="setPetTypeFilter('Cat')" class="pet-quick-pill px-3 py-1 rounded-full text-xs font-semibold border bg-white text-slate-700 border-slate-200 hover:border-orange-300" data-filter="Cat">🐱 Cats</button>
+            <button onclick="setPetTypeFilter('Rabbit')" class="pet-quick-pill px-3 py-1 rounded-full text-xs font-semibold border bg-white text-slate-700 border-slate-200 hover:border-orange-300" data-filter="Rabbit">🐰 Rabbits</button>
+            <button onclick="setPetTypeFilter('Bird')" class="pet-quick-pill px-3 py-1 rounded-full text-xs font-semibold border bg-white text-slate-700 border-slate-200 hover:border-orange-300" data-filter="Bird">🦜 Birds</button>
+            
+            <span class="text-slate-300 mx-1">|</span>
+            
+            <!-- Favorites Only Filter -->
+            <button onclick="toggleFavoritesOnlyFilter()" id="favorites-filter-btn" class="px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:text-rose-600 flex items-center gap-1.5 transition-colors">
+              <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i>
+              <span>Saved Wishlist (<span id="favorites-count">0</span>)</span>
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-500">
+            Showing <span id="petResultsCount" class="font-bold text-slate-800">6</span> available pets
+          </div>
+        </div>
+
+        <!-- Pet Cards Grid -->
+        <div id="petsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamically populated by app.js -->
+        </div>
+
+      </div>
+
+      <!-- ADOPTER TAB 2: APPLICATIONS & STATUS TRACKING -->
+      <div id="adopter-subtab-applications" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Application Status Tracking</h2>
+              <p class="text-xs text-slate-500">Track and monitor your pet adoption requests in real-time with verified stages.</p>
+            </div>
+            
+            <!-- Quick ID Search -->
+            <div class="flex items-center gap-2">
+              <input type="text" id="trackAppIdInput" placeholder="Enter Application ID (e.g. APP-101)..." class="text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 w-56">
+              <button onclick="lookupApplication()" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg transition-colors">Track</button>
+            </div>
+          </div>
+
+          <!-- Application List Container -->
+          <div id="adopterApplicationsList" class="mt-6 space-y-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ADOPTER TAB 3: MESSAGES WITH SHELTER -->
+      <div id="adopter-subtab-messages" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-[580px] flex flex-col md:flex-row">
+          
+          <!-- Shelter Contact Pane -->
+          <div class="w-full md:w-1/3 border-r border-slate-200 flex flex-col bg-slate-50">
+            <div class="p-3.5 border-b border-slate-200 font-semibold text-xs text-slate-700 uppercase tracking-wider flex items-center justify-between">
+              <span>Shelter Conversations</span>
+              <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-bold">1 Active</span>
+            </div>
+            <div class="p-3.5 bg-white border-l-4 border-orange-500 cursor-pointer shadow-sm">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
+                  HP
+                </div>
+                <div class="flex-1">
+                  <div class="font-bold text-xs text-slate-800">Happy Paws Shelter</div>
+                  <div class="text-[11px] text-slate-500 truncate">Re: Barnaby adoption request</div>
+                </div>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Chat Pane -->
+          <div class="w-full md:w-2/3 flex flex-col bg-white">
+            
+            <div class="p-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
+                  HP
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-slate-800">Happy Paws Rescue & Shelter</div>
+                  <div class="text-xs text-slate-500">Inquiry Thread for <strong class="text-orange-600">Barnaby</strong> &bull; Response time: &lt; 2 hrs</div>
+                </div>
+              </div>
+              <span class="text-xs text-emerald-600 flex items-center gap-1 font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online
+              </span>
+            </div>
+
+            <div id="adopterChatMessagesStream" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Adopter message input -->
+            <form id="adopterChatForm" onsubmit="sendAdopterMessage(event)" class="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
+              <input type="text" id="adopterChatInput" placeholder="Type your message or question to the shelter..." class="flex-1 text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none" required>
+              <button type="submit" class="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Send Message
+              </button>
+            </form>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ADOPTER TAB 4: ADOPTION HISTORY -->
+      <div id="adopter-subtab-history" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">My Adoption History</h2>
+              <p class="text-xs text-slate-500">Your heartwarming journey of pets you've welcomed into your family.</p>
+            </div>
+            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Certified Adopter
+            </span>
+          </div>
+
+          <div id="adopterHistoryList" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ADOPTER TAB 5: PROFILE MANAGEMENT -->
+      <div id="adopter-subtab-profile" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm max-w-3xl mx-auto">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Profile Management</h2>
+              <p class="text-xs text-slate-500">Keep your contact and housing information updated for shelter reviews.</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+              <i data-lucide="user-check" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <form id="adopterProfileForm" onsubmit="saveAdopterProfile(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                <input type="text" id="prof-name" value="Sarah Jenkins" required class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+                <input type="email" id="prof-email" value="sarah.jenkins@example.com" required class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+                <input type="tel" id="prof-phone" value="+1 (206) 555-0192" required class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">City & State</label>
+                <input type="text" id="prof-city" value="Seattle, WA" required class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Home Address</label>
+              <input type="text" id="prof-address" value="742 Evergreen Terrace, Apt 4B" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Residence Type</label>
+                <select id="prof-residence" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white">
+                  <option value="House with Fenced Yard">House with Fenced Yard</option>
+                  <option value="Apartment / Condo">Apartment / Condo</option>
+                  <option value="Townhouse">Townhouse</option>
+                  <option value="Rural Farm / Acreage">Rural Farm / Acreage</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Pet Experience</label>
+                <select id="prof-experience" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 bg-white">
+                  <option value="Experienced Pet Parent (5+ years)">Experienced Pet Parent (5+ years)</option>
+                  <option value="First-time Pet Owner">First-time Pet Owner</option>
+                  <option value="Have Owned Small Pets">Have Owned Small Pets</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Adopter Bio / Lifestyle</label>
+              <textarea id="prof-bio" rows="3" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500" placeholder="Tell shelters about your daily routine, family, other pets...">Work from home, active lifestyle, love weekend hikes. Looking for an energetic or affectionate companion.</textarea>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+              <button type="submit" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                Save Profile Details
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. SHELTER DASHBOARD VIEW                  -->
+    <!-- ========================================== -->
+    <section id="view-shelter" class="dashboard-view animate-fade-in space-y-6 hidden">
+      
+      <!-- Shelter Header & Navigation -->
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="home" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Happy Paws Rescue & Shelter</h1>
+            <p class="text-xs text-slate-500">Verified Shelter Partner &bull; ID: #SH-4091 &bull; Seattle, WA</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openAddPetModal()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            List New Pet
+          </button>
+        </div>
+      </div>
+
+      <!-- Shelter Subtabs Navigation -->
+      <div class="flex border-b border-slate-200 pb-2 gap-2 overflow-x-auto">
+        <button onclick="switchShelterTab('stats')" id="shelter-tab-stats" class="shelter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg bg-teal-700 text-white flex items-center gap-2">
+          <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+          Shelter Statistics
+        </button>
+        <button onclick="switchShelterTab('listings')" id="shelter-tab-listings" class="shelter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="list" class="w-4 h-4"></i>
+          My Pet Listings (<span id="shelter-pet-count">4</span>)
+        </button>
+        <button onclick="switchShelterTab('applications')" id="shelter-tab-applications" class="shelter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="inbox" class="w-4 h-4"></i>
+          Adoption Applications (<span id="shelter-app-pending-count">2</span>)
+        </button>
+        <button onclick="switchShelterTab('messages')" id="shelter-tab-messages" class="shelter-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          Adopter Messages
+        </button>
+      </div>
+
+      <!-- SHELTER TAB 1: STATISTICS -->
+      <div id="shelter-subtab-stats" class="space-y-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Active Listings</span>
+              <div class="p-2 rounded-lg bg-teal-50 text-teal-600"><i data-lucide="paw-print" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="shelter-stat-active">4</div>
+            <div class="text-[11px] text-teal-600 mt-1 font-medium">Ready for adoption</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Pending Review</span>
+              <div class="p-2 rounded-lg bg-amber-50 text-amber-600"><i data-lucide="clock" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="shelter-stat-pending">2</div>
+            <div class="text-[11px] text-amber-600 mt-1 font-medium">Awaiting decision</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Adoptions Completed</span>
+              <div class="p-2 rounded-lg bg-green-50 text-green-600"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="shelter-stat-completed">18</div>
+            <div class="text-[11px] text-green-600 mt-1 font-medium">Happy forever homes</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Adoption Rate</span>
+              <div class="p-2 rounded-lg bg-purple-50 text-purple-600"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900">89.4%</div>
+            <div class="text-[11px] text-purple-600 mt-1 font-medium">Top 5% across network</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-4">Adoption Velocity & Operations</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <div class="text-slate-500 font-semibold">Average Adoption Turnaround</div>
+              <div class="text-xl font-bold text-slate-800 mt-1">11.4 Days</div>
+              <p class="text-slate-400 mt-1">From listing publication to adoption handover</p>
+            </div>
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <div class="text-slate-500 font-semibold">Avg. Applications Per Pet</div>
+              <div class="text-xl font-bold text-slate-800 mt-1">3.2 Applicants</div>
+              <p class="text-slate-400 mt-1">High interest for domestic puppies and kittens</p>
+            </div>
+            <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <div class="text-slate-500 font-semibold">Shelter Verification Status</div>
+              <div class="text-xl font-bold text-teal-600 mt-1">Level 3 Certified</div>
+              <p class="text-slate-400 mt-1">Direct approval rights enabled</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHELTER TAB 2: MY PET LISTINGS -->
+      <div id="shelter-subtab-listings" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Pet Listings Management</h2>
+              <p class="text-xs text-slate-500">Add, edit, or update adoption status for your animals.</p>
+            </div>
+            <button onclick="openAddPetModal()" class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
+              <i data-lucide="plus" class="w-4 h-4"></i> Add New Pet
+            </button>
+          </div>
+
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Pet Info</th>
+                  <th class="py-3 px-4">Type & Breed</th>
+                  <th class="py-3 px-4">Age & Gender</th>
+                  <th class="py-3 px-4">Listing Approval</th>
+                  <th class="py-3 px-4">Adoption Status</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="shelterPetTableBody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHELTER TAB 3: ADOPTION APPLICATIONS -->
+      <div id="shelter-subtab-applications" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="border-b border-slate-100 pb-4 mb-4">
+            <h2 class="text-lg font-bold text-slate-900">Adoption Application Management</h2>
+            <p class="text-xs text-slate-500">Review applicant qualifications, home environment, and take action.</p>
+          </div>
+
+          <div id="shelterApplicationsContainer" class="space-y-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SHELTER TAB 4: COMMUNICATION WITH ADOPTERS -->
+      <div id="shelter-subtab-messages" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-[600px] flex flex-col md:flex-row">
+          
+          <!-- Adopters conversation list -->
+          <div class="w-full md:w-1/3 border-r border-slate-200 flex flex-col bg-slate-50">
+            <div class="p-3.5 border-b border-slate-200 font-semibold text-xs text-slate-700 uppercase tracking-wider flex items-center justify-between">
+              <span>Adopter Inquiries</span>
+              <span class="px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 text-[10px] font-bold">Active</span>
+            </div>
+            <div id="chatContactsList" class="flex-1 overflow-y-auto divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Active Chat Pane -->
+          <div class="w-full md:w-2/3 flex flex-col bg-white">
+            
+            <div id="activeChatHeader" class="p-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+              <div class="flex items-center gap-2.5">
+                <div id="chatHeaderAvatar" class="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs">
+                  SJ
+                </div>
+                <div>
+                  <div id="chatHeaderName" class="text-sm font-bold text-slate-800">Sarah Jenkins</div>
+                  <div id="chatHeaderPet" class="text-xs text-slate-500">Inquiring about: <span class="font-medium text-teal-600">Barnaby (Golden Retriever Mix)</span></div>
+                </div>
+              </div>
+              <span class="text-xs text-green-600 flex items-center gap-1 font-medium">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online
+              </span>
+            </div>
+
+            <div id="chatMessagesStream" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+              <!-- Dynamically populated -->
+            </div>
+
+            <form id="chatMessageForm" onsubmit="sendShelterMessage(event)" class="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
+              <input type="text" id="chatMessageInput" placeholder="Type a message to the adopter..." class="flex-1 text-xs px-3.5 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none" required>
+              <button type="submit" class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Send
+              </button>
+            </form>
+
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. ADMIN DASHBOARD VIEW                    -->
+    <!-- ========================================== -->
+    <section id="view-admin" class="dashboard-view animate-fade-in space-y-6 hidden">
+      
+      <!-- Admin Header -->
+      <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Platform Administration Console</h1>
+            <p class="text-xs text-slate-500">Super Administrator &bull; System privileged controls & auditing</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-lg border border-purple-200 flex items-center gap-1.5">
+            <i data-lucide="server" class="w-3.5 h-3.5"></i> Engine: Java 26 Active
+          </span>
+        </div>
+      </div>
+
+      <!-- Admin Subtabs Navigation -->
+      <div class="flex border-b border-slate-200 pb-2 gap-2 overflow-x-auto">
+        <button onclick="switchAdminTab('analytics')" id="admin-tab-analytics" class="admin-nav-btn px-4 py-2 text-sm font-semibold rounded-lg bg-purple-700 text-white flex items-center gap-2">
+          <i data-lucide="line-chart" class="w-4 h-4"></i>
+          Platform Analytics
+        </button>
+        <button onclick="switchAdminTab('users')" id="admin-tab-users" class="admin-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          User Management
+        </button>
+        <button onclick="switchAdminTab('approvals')" id="admin-tab-approvals" class="admin-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="check-square" class="w-4 h-4"></i>
+          Pet Approvals (<span id="admin-pending-approval-count">1</span>)
+        </button>
+        <button onclick="switchAdminTab('settings')" id="admin-tab-settings" class="admin-nav-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center gap-2">
+          <i data-lucide="sliders" class="w-4 h-4"></i>
+          System Settings
+        </button>
+      </div>
+
+      <!-- ADMIN TAB 1: PLATFORM ANALYTICS -->
+      <div id="admin-subtab-analytics" class="space-y-6">
+        
+        <!-- Key Metrics Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Total Accounts</span>
+              <div class="p-2 rounded-lg bg-blue-50 text-blue-600"><i data-lucide="users" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="admin-stat-users">1,428</div>
+            <div class="text-[11px] text-blue-600 mt-1 font-medium">+14% this month</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Total Pet Listings</span>
+              <div class="p-2 rounded-lg bg-orange-50 text-orange-600"><i data-lucide="paw-print" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="admin-stat-pets">342</div>
+            <div class="text-[11px] text-orange-600 mt-1 font-medium">Across 48 shelters</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Pending Approvals</span>
+              <div class="p-2 rounded-lg bg-amber-50 text-amber-600"><i data-lucide="alert-circle" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="admin-stat-pending">1</div>
+            <div class="text-[11px] text-amber-600 mt-1 font-medium">Requires admin review</div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold">Adoptions Finalized</span>
+              <div class="p-2 rounded-lg bg-green-50 text-green-600"><i data-lucide="check-check" class="w-4 h-4"></i></div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900" id="admin-stat-adoptions">286</div>
+            <div class="text-[11px] text-green-600 mt-1 font-medium">83.6% successful rate</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+              <span>Monthly Adoption Trends</span>
+              <span class="text-xs text-slate-400 font-normal">Past 6 Months</span>
+            </h2>
+            <div class="h-64">
+              <canvas id="adoptionTrendChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h2 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+              <span>Pet Listing Distribution</span>
+              <span class="text-xs text-slate-400 font-normal">By Species</span>
+            </h2>
+            <div class="h-64 flex items-center justify-center">
+              <canvas id="petTypePieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ADMIN TAB 2: USER MANAGEMENT -->
+      <div id="admin-subtab-users" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">User Management</h2>
+              <p class="text-xs text-slate-500">Manage user accounts, assign roles, and toggle status. Click on roles or status badges for 1-click toggles!</p>
+            </div>
+            <button onclick="openAddUserModal()" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors">
+              <i data-lucide="user-plus" class="w-4 h-4"></i> Add User
+            </button>
+          </div>
+
+          <!-- User Filters -->
+          <div class="my-4 flex flex-col sm:flex-row gap-3">
+            <input type="text" id="userSearchInput" oninput="filterUsersTable()" placeholder="Search user name or email..." class="text-xs px-3 py-2 border border-slate-200 rounded-lg flex-1 focus:ring-2 focus:ring-purple-500">
+            <select id="userRoleFilter" onchange="filterUsersTable()" class="text-xs px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-purple-500 font-medium">
+              <option value="ALL">All Roles</option>
+              <option value="Admin">Admin</option>
+              <option value="Shelter">Shelter</option>
+              <option value="Adopter">Adopter</option>
+            </select>
+          </div>
+
+          <!-- Users Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">User</th>
+                  <th class="py-3 px-4">Email</th>
+                  <th class="py-3 px-4">Role (Click to Cycle)</th>
+                  <th class="py-3 px-4">Status (Click to Toggle)</th>
+                  <th class="py-3 px-4">Created Date</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 3: PET LISTING APPROVALS -->
+      <div id="admin-subtab-approvals" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Pet Listing Approval Queue</h2>
+              <p class="text-xs text-slate-500">Review and vet pet listings submitted by shelters before they go live.</p>
+            </div>
+            <button onclick="approveAllPendingPets()" class="px-3.5 py-1.5 bg-purple-100 text-purple-800 hover:bg-purple-200 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5">
+              <i data-lucide="check-check" class="w-4 h-4"></i> Approve All Pending
+            </button>
+          </div>
+
+          <div id="adminApprovalsContainer" class="space-y-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB 4: SYSTEM SETTINGS -->
+      <div id="admin-subtab-settings" class="space-y-6 hidden">
+        <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm max-w-3xl mx-auto">
+          <div class="border-b border-slate-100 pb-4 mb-6">
+            <h2 class="text-lg font-bold text-slate-900">Platform System Settings</h2>
+            <p class="text-xs text-slate-500">Configure global platform parameters, adoption fees, and security defaults.</p>
+          </div>
+
+          <form id="systemSettingsForm" onsubmit="saveSystemSettings(event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Platform Name</label>
+              <input type="text" id="setting-plat-name" value="PawNest Online Pet Adoption" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Support Contact Email</label>
+                <input type="email" id="setting-support-email" value="support@pawnest.org" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Platform Adoption Fee ($)</label>
+                <input type="number" id="setting-adoption-fee" value="25" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Shelter Max Active Listings</label>
+                <input type="number" id="setting-max-listings" value="50" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Auto-Archive Inactive Days</label>
+                <input type="number" id="setting-auto-archive" value="45" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+              </div>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="setting-require-approval" checked class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                <span class="text-xs text-slate-700">Require Administrator review for all shelter pet listings before publishing</span>
+              </label>
+
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="setting-email-alerts" checked class="w-4 h-4 text-purple-600 rounded focus:ring-purple-500">
+                <span class="text-xs text-slate-700">Send real-time email notifications for new adoption applications</span>
+              </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+              <button type="submit" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                Save Configuration Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- FLOATING QUICK DEMO TOUR TRIGGER           -->
+  <!-- ========================================== -->
+  <div class="fixed bottom-6 left-6 z-40">
+    <button onclick="openTourModal()" class="pulse-glow flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform border-2 border-white">
+      <i data-lucide="sparkles" class="w-4 h-4"></i>
+      <span>1-Click Demo Tour</span>
+    </button>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODALS                                     -->
+  <!-- ========================================== -->
+
+  <!-- 1. Interactive Demo Tour Modal -->
+  <div id="tourModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-slide-down p-6">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Interactive Demo Scenarios</h2>
+            <p class="text-[11px] text-slate-500">Test the core features with single-click automated walkthroughs</p>
+          </div>
+        </div>
+        <button onclick="closeTourModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        
+        <!-- Scenario 1: Adopter Flow -->
+        <div class="p-3.5 rounded-xl border border-orange-200 bg-orange-50/50 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🐶 Scenario 1: Adopter Experience</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Opens Barnaby's profile, fills sample adoption application, and submits it.</p>
+          </div>
+          <button onclick="runAdopterDemoTour()" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shrink-0 transition-colors">
+            Run Test
+          </button>
+        </div>
+
+        <!-- Scenario 2: Shelter Review & Chat Flow -->
+        <div class="p-3.5 rounded-xl border border-teal-200 bg-teal-50/50 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🏠 Scenario 2: Shelter Review & Chat</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Switches to Shelter, approves Sarah's application, and sends a meet-and-greet invite.</p>
+          </div>
+          <button onclick="runShelterDemoTour()" class="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg shrink-0 transition-colors">
+            Run Test
+          </button>
+        </div>
+
+        <!-- Scenario 3: Admin Review & Settings Flow -->
+        <div class="p-3.5 rounded-xl border border-purple-200 bg-purple-50/50 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🛡️ Scenario 3: Admin Moderation</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Reviews pending pet listing (Ranger), approves it live, and cycles user roles.</p>
+          </div>
+          <button onclick="runAdminDemoTour()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg shrink-0 transition-colors">
+            Run Test
+          </button>
+        </div>
+
+        <!-- Scenario 4: Status Advance Simulator -->
+        <div class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🎉 Scenario 4: Advance Application & Confetti</span>
+            </div>
+            <p class="text-slate-500 text-[11px] mt-0.5">Simulates advancing application APP-101 to final approval with celebration confetti!</p>
+          </div>
+          <button onclick="simulateAdvanceStatus()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shrink-0 transition-colors">
+            Simulate
+          </button>
+        </div>
+
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+        <button onclick="closeTourModal()" class="text-xs text-slate-500 hover:text-slate-800 font-medium">Close Guide</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. Pet Details & Adoption Application Modal -->
+  <div id="petDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-slide-down">
+      
+      <div class="relative">
+        <img id="modalPetImage" src="" alt="Pet" class="w-full h-64 object-cover">
+        <button onclick="closePetDetailModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/70 text-white hover:bg-slate-900 flex items-center justify-center">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <span id="modalPetStatusBadge" class="absolute bottom-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur text-slate-800 shadow">
+          Available
+        </span>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 id="modalPetName" class="text-2xl font-bold text-slate-900">Pet Name</h2>
+            <p id="modalPetBreed" class="text-sm text-slate-500 font-medium">Breed &bull; Age &bull; Gender</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">Listed By</span>
+            <span id="modalPetShelter" class="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">Shelter Name</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 py-2 border-y border-slate-100 text-center text-xs">
+          <div class="p-2 rounded-lg bg-slate-50">
+            <span class="text-slate-400 block text-[10px] uppercase">Location</span>
+            <span id="modalPetLocation" class="font-semibold text-slate-700">Seattle, WA</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-50">
+            <span class="text-slate-400 block text-[10px] uppercase">Vaccinations</span>
+            <span id="modalPetVaccines" class="font-semibold text-green-700">Up to Date</span>
+          </div>
+          <div class="p-2 rounded-lg bg-slate-50">
+            <span class="text-slate-400 block text-[10px] uppercase">Temperament</span>
+            <span id="modalPetGoodWith" class="font-semibold text-slate-700">Kid & Pet Friendly</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">About This Pet</h3>
+          <p id="modalPetDescription" class="text-xs leading-relaxed text-slate-600">Pet story and personality description...</p>
+        </div>
+
+        <!-- Adoption Application Form Section -->
+        <div class="pt-4 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <i data-lucide="clipboard-pen-line" class="w-4 h-4 text-orange-600"></i>
+              Ready to Adopt? Submit Your Application
+            </h3>
+            <button type="button" onclick="autoFillSampleApplication()" class="text-[11px] font-bold text-orange-600 hover:text-orange-800 underline">
+              Auto-fill Sample Info
+            </button>
+          </div>
+
+          <form id="adoptionApplicationForm" onsubmit="submitAdoptionApplication(event)" class="space-y-3 bg-orange-50/50 p-4 rounded-xl border border-orange-100 text-xs">
+            <input type="hidden" id="appPetId">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Your Full Name</label>
+                <input type="text" id="appApplicantName" required class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-orange-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Contact Email</label>
+                <input type="email" id="appApplicantEmail" required class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-orange-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Housing Type</label>
+                <select id="appHousingType" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-orange-500">
+                  <option value="House with Fenced Yard">House with Fenced Yard</option>
+                  <option value="Apartment / Condo">Apartment / Condo</option>
+                  <option value="Townhome">Townhome</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Other Pets at Home</label>
+                <select id="appOtherPets" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-orange-500">
+                  <option value="No other pets">No other pets</option>
+                  <option value="1 Dog">1 Dog</option>
+                  <option value="1 Cat">1 Cat</option>
+                  <option value="Multiple pets">Multiple pets</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Why do you want to adopt this pet?</label>
+              <textarea id="appReason" rows="2" required placeholder="Tell the shelter about your schedule, home, and love for animals..." class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-orange-500"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button type="button" onclick="closePetDetailModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+              <button type="submit" class="px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Submit Adoption Application
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Shelter: Add New Pet Modal with Quick Presets -->
+  <div id="addPetModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-slide-down p-6">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">List New Pet for Adoption</h2>
+          <p class="text-xs text-slate-500">Fill in the pet's details or select a 1-click sample preset.</p>
+        </div>
+        <button onclick="closeAddPetModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div class="mb-4 p-3 bg-teal-50 rounded-xl border border-teal-100">
+        <span class="text-[11px] font-bold text-teal-800 uppercase tracking-wider block mb-1.5">⚡ 1-Click Sample Presets:</span>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="fillPetPreset('pup')" class="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold transition-colors">
+            🐶 Golden Pup
+          </button>
+          <button type="button" onclick="fillPetPreset('cat')" class="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold transition-colors">
+            🐱 Persian Cat
+          </button>
+          <button type="button" onclick="fillPetPreset('bunny')" class="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold transition-colors">
+            🐰 Lop Bunny
+          </button>
+        </div>
+      </div>
+
+      <form id="newPetForm" onsubmit="saveNewPetListing(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Pet Name</label>
+            <input type="text" id="newPetName" placeholder="e.g. Copper" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Species / Pet Type</label>
+            <select id="newPetType" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white">
+              <option value="Dog">Dog</option>
+              <option value="Cat">Cat</option>
+              <option value="Rabbit">Rabbit</option>
+              <option value="Bird">Bird</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Breed</label>
+            <input type="text" id="newPetBreed" placeholder="e.g. Beagle Mix" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Age</label>
+            <input type="text" id="newPetAge" placeholder="e.g. 2 years" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Gender</label>
+            <select id="newPetGender" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Photo Image URL</label>
+          <input type="url" id="newPetImage" placeholder="https://images.unsplash.com/..." class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          <p class="text-[10px] text-slate-400 mt-1">Leave blank to use a curated animal photo automatically.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Location</label>
+            <input type="text" id="newPetLocation" value="Seattle, WA" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Temperament / Compatibility</label>
+            <input type="text" id="newPetGoodWith" value="Good with kids, cats & other dogs" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Description & Medical Background</label>
+          <textarea id="newPetDescription" rows="3" required placeholder="Describe personality, favorite activities, spayed/neutered status..." class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeAddPetModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="check" class="w-4 h-4"></i> Submit Listing
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Admin: Add / Edit User Modal -->
+  <div id="addUserModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 animate-slide-down p-6">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Create New User Account</h2>
+          <p class="text-xs text-slate-500">Add an administrator, shelter staff, or adopter profile.</p>
+        </div>
+        <button onclick="closeAddUserModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="newUserForm" onsubmit="saveNewUser(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Full Name</label>
+          <input type="text" id="newUserName" required placeholder="e.g. John Doe" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="newUserEmail" required placeholder="john.doe@example.com" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">User Role</label>
+            <select id="newUserRole" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white">
+              <option value="Adopter">Adopter</option>
+              <option value="Shelter">Shelter</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Status</label>
+            <select id="newUserStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white">
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 border border-slate-300 rounded-lg font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="check" class="w-4 h-4"></i> Create Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Adoption Certificate Modal -->
+  <div id="certificateModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-amber-50 rounded-2xl max-w-lg w-full shadow-2xl border-4 border-amber-300 animate-slide-down p-8 text-center relative overflow-hidden">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-200/50 rounded-full blur-xl pointer-events-none"></div>
+      
+      <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3 border-2 border-amber-300 shadow">
+        <i data-lucide="award" class="w-8 h-8"></i>
+      </div>
+
+      <div class="uppercase tracking-widest text-[11px] font-bold text-amber-800">Official Certificate of Adoption</div>
+      <h2 class="text-2xl font-black text-slate-900 mt-1 mb-2 font-serif" id="certPetName">Buster</h2>
+      
+      <p class="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+        This certifies that <strong id="certAdopterName" class="text-slate-900">Sarah Jenkins</strong> has officially welcomed this beloved pet into their permanent, loving forever home.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3 my-5 py-3 border-y border-amber-200/80 text-xs">
+        <div>
+          <span class="text-slate-400 block text-[10px] uppercase font-bold">Adopted On</span>
+          <span id="certDate" class="font-bold text-slate-800">May 14, 2025</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block text-[10px] uppercase font-bold">Rescued By</span>
+          <span id="certShelter" class="font-bold text-teal-700">Cascade Animal Haven</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-3">
+        <button onclick="printOrSaveCert()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow transition-colors flex items-center gap-1.5">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print Certificate
+        </button>
+        <button onclick="closeCertModal()" class="px-4 py-2 border border-amber-300 hover:bg-amber-100 text-amber-900 font-semibold text-xs rounded-xl transition-colors">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- APPLICATION JAVASCRIPT -->
+  <script src="app.js"></script>
+</body>
+</html>

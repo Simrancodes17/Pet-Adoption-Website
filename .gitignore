@@ -1,0 +1,4 @@
+**/target/
+**/bin/
+**/db.properties
+**/.env
